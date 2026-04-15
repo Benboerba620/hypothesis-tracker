@@ -1,39 +1,48 @@
 """
-安装验证脚本 / Installation Checker
-验证 hypothesis-tracker 安装是否完整。
-用法：python check_setup.py [--workspace /path/to/workspace]
+Installation and repository checker for Hypothesis Tracker.
+
+Usage:
+  python scripts/check_setup.py
+  python scripts/check_setup.py --workspace /path/to/workspace
+  python scripts/check_setup.py --repo-mode
 """
+
+from __future__ import annotations
+
+import argparse
+import io
 import os
 import sys
-import io
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 
 try:
     from workspace_paths import find_workspace_root
 except ImportError:
-    def find_workspace_root():
+    def find_workspace_root() -> str:
         return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
-def check(label, condition, warn=False):
+def check(label: str, condition: bool, warn: bool = False) -> bool:
     tag = "[OK]" if condition else ("[WARN]" if warn else "[FAIL]")
     print(f"  {tag} {label}")
     return condition
 
 
-def check_repo(root):
-    """Check that all source files exist in the repo (for CI)."""
-    print(f"Hypothesis Tracker 仓库检查 (repo mode)")
-    print(f"仓库目录：{root}\n")
+def joiner(root: str, *parts: str) -> str:
+    return os.path.join(root, *parts)
+
+
+def check_repo(root: str) -> int:
+    """Check repository source files for CI."""
+    print("Hypothesis Tracker repository check (repo mode)")
+    print(f"Repository root: {root}\n")
 
     ok = True
-    j = lambda *p: os.path.join(root, *p)
-
     py = sys.version_info
     ok &= check(f"Python {py.major}.{py.minor}.{py.micro}", py >= (3, 10))
 
-    print("\n源文件：")
+    print("\nSource files:")
     source_files = [
         "scripts/check_setup.py",
         "scripts/workspace_paths.py",
@@ -52,121 +61,159 @@ def check_repo(root):
         "config/hypothesis-tracker.env.example",
         "examples/H1-example-thesis.md",
     ]
-    for f in source_files:
-        ok &= check(f, os.path.isfile(j(f)))
+    for file_path in source_files:
+        ok &= check(file_path, os.path.isfile(joiner(root, file_path)))
 
-    print("\n文档：")
-    for f in ["README.md", "LICENSE", "VERSION", "CHANGELOG.md", "CONTRIBUTING.md", "INSTALL-FOR-AI.md"]:
-        ok &= check(f, os.path.isfile(j(f)))
+    print("\nDocs:")
+    docs = [
+        "README.md",
+        "LICENSE",
+        "VERSION",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "INSTALL-FOR-AI.md",
+    ]
+    for file_path in docs:
+        ok &= check(file_path, os.path.isfile(joiner(root, file_path)))
 
-    # YAML parse check
-    print("\nYAML 验证：")
+    print("\nYAML validation:")
     yaml_ok = False
     try:
         import yaml
-        with open(j("config", "hypothesis-tracker.example.yaml"), "r", encoding="utf-8") as fh:
-            cfg = yaml.safe_load(fh)
+
+        config_path = joiner(root, "config", "hypothesis-tracker.example.yaml")
+        with open(config_path, "r", encoding="utf-8") as handle:
+            cfg = yaml.safe_load(handle)
         yaml_ok = cfg is not None and isinstance(cfg, dict)
     except ImportError:
         print("  [WARN] PyYAML not installed")
-    except Exception as e:
-        print(f"  [FAIL] YAML parse error: {e}")
+    except Exception as exc:  # pragma: no cover - surfaced in CI/logs
+        print(f"  [FAIL] YAML parse error: {exc}")
     ok &= check("example YAML valid", yaml_ok)
 
-    print(f"\n{'✅ 仓库检查通过' if ok else '❌ 存在问题，请检查上方 [FAIL] 项目'}")
-    sys.exit(0 if ok else 1)
+    print("\nPASS" if ok else "\nFAIL")
+    return 0 if ok else 1
 
 
-def main():
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--workspace", default=None)
-    parser.add_argument("--repo-mode", action="store_true",
-                        help="Check repo source files instead of installed workspace")
-    args = parser.parse_args()
-
-    root = args.workspace or find_workspace_root()
-
-    if args.repo_mode:
-        return check_repo(root)
-
-    print(f"Hypothesis Tracker 安装检查")
-    print(f"工作目录：{root}\n")
+def check_workspace(root: str) -> int:
+    """Check an installed workspace."""
+    print("Hypothesis Tracker installation check")
+    print(f"Workspace root: {root}\n")
 
     ok = True
-    j = lambda *p: os.path.join(root, *p)
-
-    # Python version
     py = sys.version_info
     ok &= check(f"Python {py.major}.{py.minor}.{py.micro}", py >= (3, 10))
 
-    # Directories
-    print("\n目录结构：")
-    for d in ["hypothesis", "portfolio", "portfolio/journal", "config", "scripts", "templates"]:
-        ok &= check(d, os.path.isdir(j(d)))
+    print("\nDirectory structure:")
+    directories = [
+        "hypothesis",
+        "portfolio",
+        "portfolio/journal",
+        "config",
+        "scripts",
+        "templates",
+    ]
+    for directory in directories:
+        ok &= check(directory, os.path.isdir(joiner(root, directory)))
 
-    skills_dir = j(".claude", "skills")
+    skills_dir = joiner(root, ".claude", "skills")
     ok &= check(".claude/skills", os.path.isdir(skills_dir))
 
-    # Config files
-    print("\n配置文件：")
-    ok &= check("config/hypothesis-tracker.yaml", os.path.isfile(j("config", "hypothesis-tracker.yaml")))
-    ok &= check("config/hypothesis-tracker-rules.md", os.path.isfile(j("config", "hypothesis-tracker-rules.md")))
+    print("\nConfig files:")
+    ok &= check(
+        "config/hypothesis-tracker.yaml",
+        os.path.isfile(joiner(root, "config", "hypothesis-tracker.yaml")),
+    )
+    ok &= check(
+        "config/hypothesis-tracker-rules.md",
+        os.path.isfile(joiner(root, "config", "hypothesis-tracker-rules.md")),
+    )
 
-    # Try loading YAML
     yaml_ok = False
     try:
         import yaml
-        with open(j("config", "hypothesis-tracker.yaml"), "r", encoding="utf-8") as f:
-            cfg = yaml.safe_load(f)
+
+        config_path = joiner(root, "config", "hypothesis-tracker.yaml")
+        with open(config_path, "r", encoding="utf-8") as handle:
+            cfg = yaml.safe_load(handle)
         yaml_ok = cfg is not None and isinstance(cfg, dict)
     except ImportError:
-        print("  [WARN] PyYAML not installed — run: pip install pyyaml")
-    except Exception as e:
-        print(f"  [FAIL] YAML parse error: {e}")
+        print("  [WARN] PyYAML not installed - run: pip install pyyaml")
+    except Exception as exc:  # pragma: no cover - surfaced in CI/logs
+        print(f"  [FAIL] YAML parse error: {exc}")
     ok &= check("YAML config valid", yaml_ok)
 
-    # Skills
-    print("\nSkill 文件：")
-    for skill in ["hypothesis-tracker-trade.md", "hypothesis-tracker-status.md", "hypothesis-tracker-new.md"]:
+    print("\nSkill files:")
+    skills = [
+        "hypothesis-tracker-trade.md",
+        "hypothesis-tracker-status.md",
+        "hypothesis-tracker-new.md",
+    ]
+    for skill in skills:
         ok &= check(skill, os.path.isfile(os.path.join(skills_dir, skill)))
 
-    # Templates
-    print("\n模板文件：")
-    for tmpl in ["hypothesis-tracker-hypothesis-template.md", "hypothesis-tracker-journal-template.md", "hypothesis-tracker-report-template.md"]:
-        ok &= check(tmpl, os.path.isfile(j("templates", tmpl)))
+    print("\nTemplate files:")
+    templates = [
+        "hypothesis-tracker-hypothesis-template.md",
+        "hypothesis-tracker-journal-template.md",
+        "hypothesis-tracker-report-template.md",
+    ]
+    for template in templates:
+        ok &= check(template, os.path.isfile(joiner(root, "templates", template)))
 
-    # CSV files
-    print("\n数据文件：")
-    for csv_file in ["portfolio/trades.csv", "portfolio/holdings.csv"]:
-        ok &= check(csv_file, os.path.isfile(j(csv_file)))
+    print("\nData files:")
+    csv_files = ["portfolio/trades.csv", "portfolio/holdings.csv"]
+    for csv_file in csv_files:
+        ok &= check(csv_file, os.path.isfile(joiner(root, csv_file)))
 
-    # CLAUDE.md
-    print("\nCLAUDE.md：")
-    claude_path = j("CLAUDE.md")
+    print("\nCLAUDE.md:")
+    claude_path = joiner(root, "CLAUDE.md")
     has_claude = os.path.isfile(claude_path)
     check("CLAUDE.md exists", has_claude)
     if has_claude:
-        with open(claude_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        check("contains Hypothesis Tracker section", "Hypothesis Tracker" in content, warn=True)
+        with open(claude_path, "r", encoding="utf-8") as handle:
+            content = handle.read()
+        check(
+            "contains Hypothesis Tracker section",
+            "Hypothesis Tracker" in content,
+            warn=True,
+        )
 
-    # Example
-    print("\n示例文件：")
-    check("examples/H1-example-thesis.md", os.path.isfile(j("examples", "H1-example-thesis.md")))
+    print("\nExample file:")
+    check(
+        "examples/H1-example-thesis.md",
+        os.path.isfile(joiner(root, "examples", "H1-example-thesis.md")),
+    )
 
-    # Obsidian
-    print("\nObsidian Bases：")
+    print("\nObsidian:")
     obsidian_dir = os.path.join(os.path.dirname(root), ".obsidian")
     if os.path.isdir(obsidian_dir):
-        print("  [INFO] Obsidian vault detected. Set obsidian.enabled: true in config to activate dashboard.")
+        print(
+            "  [INFO] Obsidian vault detected. "
+            "Set obsidian.enabled: true in config to activate dashboard."
+        )
     else:
         print("  [INFO] Obsidian not detected (optional feature)")
 
-    # Summary
-    print(f"\n{'✅ 安装完整' if ok else '❌ 存在问题，请检查上方 [FAIL] 项目'}")
-    sys.exit(0 if ok else 1)
+    print("\nPASS" if ok else "\nFAIL")
+    return 0 if ok else 1
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--workspace", default=None)
+    parser.add_argument(
+        "--repo-mode",
+        action="store_true",
+        help="Check repo source files instead of installed workspace",
+    )
+    args = parser.parse_args()
+
+    root = args.workspace or find_workspace_root()
+    if args.repo_mode:
+        return check_repo(root)
+    return check_workspace(root)
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
