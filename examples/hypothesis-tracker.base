@@ -1,0 +1,50 @@
+filters:
+  and:
+    - file.hasTag("hypothesis")
+    - file.ext == "md"
+formulas:
+  certainty_bar: if(certainty, if(certainty >= 80, "🟢 " + certainty.toString() + "%", if(certainty >= 50, "🟡 " + certainty.toString() + "%", "🔴 " + certainty.toString() + "%")), "")
+  days_since: (now() - file.ctime).days
+  is_active: if(file.hasTag("active"), "当前", "已归档")
+properties:
+  formula.certainty_bar:
+    displayName: 确定性
+  formula.is_active:
+    displayName: 版本
+  status:
+    displayName: 状态
+  created:
+    displayName: 创建日期
+views:
+  - type: table
+    name: 当前假设
+    filters:
+      and:
+        - file.hasTag("active")
+    order:
+      - file.name
+      - formula.certainty_bar
+      - status
+      - created
+    summaries:
+      certainty: Average
+  - type: table
+    name: 全部假设
+    order:
+      - file.name
+      - formula.certainty_bar
+      - status
+      - formula.is_active
+      - created
+    summaries:
+      certainty: Average
+  - type: table
+    name: 高确定性 (>=80%)
+    filters:
+      and:
+        - file.hasTag("active")
+        - certainty >= 80
+    order:
+      - file.name
+      - formula.certainty_bar
+      - status

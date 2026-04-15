@@ -1,0 +1,59 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run setup check
+        run: python scripts/check_setup.py --repo-mode
+
+      - name: Lint scripts
+        run: |
+          pip install ruff
+          ruff check scripts/ --select E,F,W
+
+  install-test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Test install script (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          bash scripts/install.sh --target-dir /tmp/ht-test
+          python /tmp/ht-test/scripts/check_setup.py
+
+      - name: Test install script (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          .\scripts\install.ps1 -TargetDir "$env:TEMP\ht-test"
+          python "$env:TEMP\ht-test\scripts\check_setup.py"

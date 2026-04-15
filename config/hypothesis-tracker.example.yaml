@@ -1,0 +1,51 @@
+# hypothesis-tracker.yaml
+# 投资假设追踪系统主配置 / Main configuration for Hypothesis Tracker
+
+# --- 假设设置 / Hypothesis Settings ---
+hypothesis:
+  directory: hypothesis
+  prefix: "H"
+  default_certainty: 50
+  signals:
+    positive: "🟢"
+    neutral: "🟡"
+    negative: "🔴"
+  thresholds:
+    high: 80       # >= 80% = 🟢
+    medium: 50     # >= 50% = 🟡, < 50% = 🔴
+
+# --- 交易设置 / Trading Settings ---
+trading:
+  enabled: true
+  trades_file: portfolio/trades.csv
+  holdings_file: portfolio/holdings.csv
+  journal_directory: portfolio/journal
+  markets:
+    - {id: us, name: "US Stock", currency: USD}
+    - {id: cn, name: "A-Share", currency: CNY}
+    - {id: hk, name: "HK Stock", currency: HKD}
+    # 按需添加 / Add your markets:
+    # - {id: jp, name: "Japan", currency: JPY}
+    # - {id: helsinki, name: "Helsinki", currency: EUR}
+
+# --- 风控规则 / Risk Rules (used by /ht-trade principle check) ---
+risk_rules:
+  max_single_stock_pct: 30       # 单票占 NAV 上限
+  max_single_thesis_pct: 50      # 单 thesis 总敞口上限
+  max_positions: 8               # 最大持仓数量
+  min_cash_pct: 10               # 最低现金比例
+  max_add_count: 3               # 最大加仓次数（含建仓）
+  stop_loss_required: true       # 建仓时必须设止损
+
+# --- 规则文件 / Rules File ---
+rules:
+  file: config/hypothesis-tracker-rules.md
+  auto_propose_threshold: 3      # 模式确认 N 次后提议升级为规则
+
+# --- Obsidian 集成（可选）/ Obsidian Integration (optional) ---
+obsidian:
+  enabled: false
+  bases_file: hypothesis/hypothesis-tracker.base
+
+# --- 语言 / Language ---
+language: cn   # cn / en

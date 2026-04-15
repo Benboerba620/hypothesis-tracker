@@ -1,0 +1,9 @@
+# {DATE} 交易日志
+
+## {TIME} {ACTION} {TICKER} {SHARES}股 @{PRICE}
+
+**方向判断**：{DIRECTION_RATIONALE}
+**关联假设**：{HYPOTHESIS_LINK}
+**市场上下文**：{MARKET_CONTEXT}
+**仓位计划**：{POSITION_PLAN}
+**情绪自检**：{EMOTIONAL_CHECK}

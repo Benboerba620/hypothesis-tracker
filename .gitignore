@@ -1,0 +1,32 @@
+# User data (created by installer, never committed)
+hypothesis/
+portfolio/
+config/hypothesis-tracker.env
+config/hypothesis-tracker.yaml
+config/hypothesis-tracker-rules.md
+
+# Keep example/template files
+!config/*.example*
+!examples/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Baidu Sync conflict files
+*冲突文件*
+*(版本*
