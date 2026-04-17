@@ -3,6 +3,9 @@
 [![Release](https://img.shields.io/github/v/release/Benboerba620/hypothesis-tracker?sort=semver)](https://github.com/Benboerba620/hypothesis-tracker/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+> 🔗 **"零代码 AI 投研三件套" 之一** ｜ Part of the zero-code AI investment research toolkit
+> [知识库底座 karpathy-claude-wiki](https://github.com/Benboerba620/karpathy-claude-wiki) · [日常盯盘 daily-watchlist](https://github.com/Benboerba620/daily-watchlist) · 假设追踪 hypothesis-tracker
+
 > AI-powered investment hypothesis tracking system for Claude Code. Track theses, record trades, accumulate evidence, and extract rules from patterns.
 > 面向 Claude Code 的 AI 投资假设追踪系统。追踪假设、记录交易、积累证据、从模式中提炼规则。
 
