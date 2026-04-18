@@ -1,15 +1,15 @@
-# Contributing
+# 贡献指南
 
-感谢你的关注！/ Thanks for your interest!
+感谢你的关注！
 
-## Ground Rules
+## 基本原则
 
 - **小范围改动**：一个 PR 只做一件事
 - **向后兼容**：不破坏已有用户的安装
 - **命名空间**：所有新文件以 `hypothesis-tracker-` 开头
 - **跑通检查**：提交前确保 `python scripts/check_setup.py` 通过
 
-## Good Contributions
+## 欢迎的贡献
 
 - Bug 修复
 - 安装器改进（新平台支持、错误提示优化）
@@ -17,14 +17,14 @@
 - 新的证据信号类型
 - 假设模板改进
 
-## Out of Scope
+## 不在范围内
 
 - 券商/交易所 API 集成
 - 自动交易执行
 - 纯 GUI 功能
 - 需要付费 API 的默认功能
 
-## Release Process
+## 发版流程
 
 1. 更新 `VERSION`
 2. 更新 `CHANGELOG.md`

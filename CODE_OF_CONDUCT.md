@@ -1,6 +1,6 @@
-# Code of Conduct
+# 行为准则
 
-Be respectful, concrete, and constructive.
+友善、具体、有建设性。
 
-Use [GitHub Issues](https://github.com/Benboerba620/hypothesis-tracker/issues) to report bugs or suggest features.
-Use [GitHub Discussions](https://github.com/Benboerba620/hypothesis-tracker/discussions) for questions and ideas.
+- 报告 bug 或提需求 → [GitHub Issues](https://github.com/Benboerba620/hypothesis-tracker/issues)
+- 提问和讨论想法 → [GitHub Discussions](https://github.com/Benboerba620/hypothesis-tracker/discussions)
